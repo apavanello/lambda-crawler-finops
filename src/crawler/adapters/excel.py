@@ -2,6 +2,7 @@ import pandas as pd
 from typing import List, Dict
 import logging
 from ..domain.models import LambdaResult
+from datetime import datetime
 
 logger = logging.getLogger("LambdaCrawler")
 
@@ -30,11 +31,15 @@ def generate_report(results: List[LambdaResult], output_path: str = "report.xlsx
                 "Type": r.error_type
             })
         else:
+            lm_val = r.last_modified
+            if lm_val and isinstance(lm_val, datetime):
+                lm_val = lm_val.replace(tzinfo=None)
+            
             success_data.append({
                 "Function Name": r.function_name,
                 "Account ID": r.account_id,
                 "Region": r.region,
-                "Last Modified": r.last_modified.replace(tzinfo=None) if r.last_modified else None,
+                "Last Modified": lm_val,
                 "Invocations (Period)": r.invocation_count_period,
                 "Has Triggers": r.has_triggers,
                 "Trigger Count": r.trigger_count,

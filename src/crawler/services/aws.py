@@ -25,6 +25,7 @@ def create_session(profile_name: Optional[str], region: Optional[str] = None) ->
         raise
 
 from datetime import datetime, timedelta
+from dateutil.parser import parse
 
 def get_parameters_client(session: boto3.Session):
     return session.client('ssm')
@@ -42,8 +43,16 @@ def get_lambda_details(session: boto3.Session, function_name: str) -> dict:
     client = get_lambda_client(session)
     response = client.get_function(FunctionName=function_name)
     conf = response['Configuration']
+    
+    lm = conf.get('LastModified')
+    if isinstance(lm, str):
+        try:
+            lm = parse(lm)
+        except:
+            pass # Keep as string or None if parse fails, though unlikely
+
     return {
-        'LastModified': conf.get('LastModified'),
+        'LastModified': lm,
         'FunctionAm': conf.get('FunctionArn'),
         'Runtime': conf.get('Runtime'),
         'MemorySize': conf.get('MemorySize')
