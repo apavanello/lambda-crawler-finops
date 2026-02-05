@@ -6,7 +6,7 @@ from typing import List, Optional
 class InputItem:
     name: str
     account: str
-    region: str = "us-east-1"
+    region: Optional[str] = None
 
 @dataclass
 class LambdaResult:

@@ -20,7 +20,7 @@ def load_input(file_path: str) -> List[InputItem]:
         items.append(InputItem(
             name=entry['name'],
             account=str(entry['account']), # Garante string
-            region=entry.get('region', 'us-east-1')
+            region=entry.get('region')     # Returns None if missing, letting Profile decide
         ))
     return items
 

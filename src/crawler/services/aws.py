@@ -6,10 +6,11 @@ from botocore.exceptions import ClientError, ProfileNotFound
 
 logger = logging.getLogger("LambdaCrawler")
 
-def create_session(profile_name: Optional[str], region: str = "us-east-1") -> boto3.Session:
+def create_session(profile_name: Optional[str], region: Optional[str] = None) -> boto3.Session:
     """
     Creates a Boto3 Session using the specified profile.
-    If profile is None, uses default chain (env vars, instance role).
+    If profile is None, uses default chain.
+    If region is None, uses profile's configured region.
     """
     try:
         if profile_name:

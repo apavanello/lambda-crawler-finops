@@ -48,6 +48,8 @@ Crie um arquivo JSON (ex: `lambdas.json`) com as funções que deseja auditar:
     "account": "987654321098"
   }
 ]
+
+> **Nota:** O campo `region` é opcional. Se não for informado, a ferramenta utilizará a região padrão configurada no seu profile AWS (`~/.aws/config`).
 ```
 
 ### 2. Execute o Crawler
