@@ -1,0 +1,8 @@
+[
+  {
+    "name": "test-lambda-1",
+    "account": "111111111111",
+    "region": "us-east-1",
+    "_error": "No profile found in ~/.aws/config for account 111111111111"
+  }
+]
