@@ -40,6 +40,7 @@ def generate_report(results: List[LambdaResult], output_path: str = "report.xlsx
                 "Account ID": r.account_id,
                 "Region": r.region,
                 "Last Modified": lm_val,
+                "Last Invocation Date": r.last_invocation_date.replace(tzinfo=None) if r.last_invocation_date else None,
                 "Invocations (Period)": r.invocation_count_period,
                 "Has Triggers": r.has_triggers,
                 "Trigger Count": r.trigger_count,

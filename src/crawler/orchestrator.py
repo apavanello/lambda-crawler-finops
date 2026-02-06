@@ -49,9 +49,9 @@ def run_crawler(items: List[InputItem], days: int) -> List[LambdaResult]:
             result.last_modified = details['LastModified']
             
             # 4. Fetch Metrics
-            invocations = get_invocation_metrics(session, item.name, days)
+            invocations, last_date = get_invocation_metrics(session, item.name, days)
             result.invocation_count_period = invocations
-            result.last_invocation_date = None # Hard to get exact date from "Sum" without more queries. Leaving as None for MVP logic.
+            result.last_invocation_date = last_date
             
             # 5. Fetch Triggers
             triggers = get_triggers(session, item.name)

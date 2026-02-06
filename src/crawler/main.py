@@ -1,5 +1,6 @@
 import click
 import sys
+import os
 import logging
 from crawler.domain.models import InputItem
 from crawler.services.profiles import load_aws_profiles
@@ -27,6 +28,11 @@ def main(input_file, days, limit):
     click.echo(f"Window: {days} days")
     
     try:
+        # Determine output filenames
+        base_name = os.path.splitext(os.path.basename(input_file))[0]
+        report_file = f"{base_name}_report.xlsx"
+        errors_file = f"{base_name}_errors.json"
+
         # 1. Load Input
         items = load_input(input_file)
         logger.info(f"Loaded {len(items)} items from input.")
@@ -45,7 +51,7 @@ def main(input_file, days, limit):
         
         # 5. Generate Report
         from crawler.adapters.excel import generate_report
-        generate_report(results, "lambda_audit_report.xlsx")
+        generate_report(results, report_file)
         
         # 6. Save Errors JSON (Retry State)
         from crawler.adapters.storage import save_errors
@@ -60,8 +66,8 @@ def main(input_file, days, limit):
                 })
         
         if errors:
-            save_errors("errors.json", errors)
-            logger.warning(f"Saved {len(errors)} failed items to errors.json")
+            save_errors(errors_file, errors)
+            logger.warning(f"Saved {len(errors)} failed items to {errors_file}")
             
         logger.info("Done.")
 

@@ -58,26 +58,25 @@ def get_lambda_details(session: boto3.Session, function_name: str) -> dict:
         'MemorySize': conf.get('MemorySize')
     }
 
-def get_invocation_metrics(session: boto3.Session, function_name: str, days: int) -> int:
+from typing import Tuple, Optional
+
+def get_invocation_metrics(session: boto3.Session, function_name: str, days: int) -> Tuple[int, Optional[datetime]]:
     """
-    Queries CloudWatch for Sum of Invocations over the last X days.
+    Queries CloudWatch for Sum of Invocations.
+    Returns (Total Count, Last Execution Date).
     """
     client = get_cloudwatch_client(session)
     end_time = datetime.utcnow()
     start_time = end_time - timedelta(days=days)
     
-    # We ask for a single datapoint covering the entire period to save requests, 
-    # or we can ask for daily to be more granular. 
-    # For "Total Invocations", a single sum is enough, but CloudWatch limits the period size vs retention.
-    # 180 days -> period of 1 day (86400s) is fine.
-    
+    # 1. Get Total Count (Efficient single query)
     response = client.get_metric_statistics(
         Namespace='AWS/Lambda',
         MetricName='Invocations',
         Dimensions=[{'Name': 'FunctionName', 'Value': function_name}],
         StartTime=start_time,
         EndTime=end_time,
-        Period=86400 * days, # One big chunk? Might effect granularity rules. Safe bet: 1 day period.
+        Period=86400 * days, 
         Statistics=['Sum']
     )
     
@@ -86,7 +85,30 @@ def get_invocation_metrics(session: boto3.Session, function_name: str, days: int
         for dp in response['Datapoints']:
             total_invocations += int(dp.get('Sum', 0))
             
-    return total_invocations
+    last_date = None
+    
+    # 2. If active, find the last date (Granular query)
+    if total_invocations > 0:
+        # Query daily points
+        daily_res = client.get_metric_statistics(
+            Namespace='AWS/Lambda',
+            MetricName='Invocations',
+            Dimensions=[{'Name': 'FunctionName', 'Value': function_name}],
+            StartTime=start_time,
+            EndTime=end_time,
+            Period=86400, # Daily granularity
+            Statistics=['Sum']
+        )
+        
+        # Sort by timestamp descending
+        if 'Datapoints' in daily_res:
+             sorted_dps = sorted(daily_res['Datapoints'], key=lambda x: x['Timestamp'], reverse=True)
+             for dp in sorted_dps:
+                 if dp.get('Sum', 0) > 0:
+                     last_date = dp['Timestamp']
+                     break
+            
+    return total_invocations, last_date
 
 def get_triggers(session: boto3.Session, function_name: str) -> list:
     """
